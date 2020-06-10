@@ -21,17 +21,24 @@ class EmotionData:
     def getData(self, index, laplacian = True):
         original = np.mat( self.data.pixels[index] ).reshape(48, 48).astype(np.uint8)
         if laplacian:
-            return cv2.Laplacian(original, cv2.CV_64F)
-        return original
+            return cv2.Laplacian(original, cv2.CV_64F).reshape((48, 48, 1)).astype(np.uint8)
+        return original.reshape((48, 48, 1)).astype(np.uint8)
     
-    def getGen(self, batch_size):
+    def getGen(self, batch_size, laplacian = True):
         n = len(self.data)
-        for start in range(0, n, batch_size):
-            end = min(n, start + batch_size)            
-            data =   [ self.getData( i ) for i in range(start, end)]
-            labels = [ self.getLabel(i)  for i in range(start, end) ]
-            yield np.array(data), np.array(labels)
+        while(True):
+            for start in range(0, n, batch_size):
+                end = min(n, start + batch_size)            
+                data =   [ self.getData(i, laplacian) for i in range(start, end)]
+                labels = [ self.getLabel(i)  for i in range(start, end) ]
+                yield np.array(data), np.array(labels)
 
+    def getWhole(self, laplacian):
+        n = len(self.data)
+        data =   [ self.getData(i, laplacian) for i in range(n)]
+        labels = [ self.getLabel(i)  for i in range(n) ]
+        return np.array(data), np.array(labels)
+        
     def showData(self):
         index = random.randint(1,30000)
         original = self.getData(index, laplacian=False)
